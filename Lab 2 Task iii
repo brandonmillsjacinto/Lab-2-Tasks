@@ -1,0 +1,56 @@
+#include "mbed.h"
+#include "arm_book_lib.h"
+
+DigitalIn gasDetector(D2);
+DigitalIn overTempDetector(D3);
+DigitalIn enterButton(D4); // Button to input security code
+
+DigitalOut alarmLed(LED1);
+
+const int correctCode = 1234; // Predefined security code
+int enteredCode = 0;
+bool emergencyMode = false;
+
+gasDetector.mode(PullDown);
+overTempDetector.mode(PullDown);
+enterButton.mode(PullDown);
+
+void enterSecurityCode() {
+    int input; // Simulated input (should be replaced with actual input method)
+    printf("Enter 4-digit security code: ");
+    scanf("%d", &input);
+    
+    if (input == correctCode) {
+        emergencyMode = false;
+        alarmLed = OFF;
+        printf("Access granted. Alarm deactivated.\n");
+    } else {
+        printf("Incorrect code. Try again.\n");
+    }
+}
+
+int main()
+{
+    while (true) {
+        if (gasDetector && overTempDetector) {
+            emergencyMode = true;
+        }
+        
+        if (emergencyMode) {
+            for (int i = 0; i < 5; i++) { // Rapid flashing effect
+                alarmLed = !alarmLed;
+                wait(0.2); 
+            }
+        } else {
+            if (gasDetector || overTempDetector) {
+                alarmLed = ON;
+            } else {
+                alarmLed = OFF;
+            }
+        }
+        
+        if (enterButton) { // Check if security code input is required
+            enterSecurityCode();
+        }
+    }
+}
