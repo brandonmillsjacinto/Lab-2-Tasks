@@ -1,0 +1,35 @@
+/* Filename: Lab 2 Task ii.cpp
+Author: Brandon Mills Jacinto
+Date: 06/02/2025
+*/
+#include "mbed.h" // I used the Mbed Library for Hardware control.
+#include "arm_book_lib.h" // I used the arm book library to use additional functions (i.e. ON, OFF, LED control etc.).
+
+int main()
+{
+    DigitalIn gasDetector (D2); // This defines a digital input for the gas detector sensor at pin D2.
+    DigitalIn overTempDetector (D3); // This defines a digital input for the over-temperature sensor at pin D3.
+
+    DigitalIn alarmOffButton(BUTTON1);  // Button B1 us ued to turn the alarm off.
+
+    DigitalOut alarmLed(LED1); // LED1 will act as the alarm.
+
+    gasDetector.mode(PullDown); // This sets the gas detector pin to pull-down mode so it starts at LOW by default.
+    overTempDetector.mode(PullDown); // This sets the over temperature pin to pull-down mode so it starts at LOW by default.
+
+    alarmLed = OFF; // This line is used to state that the alarm starts off.
+
+    bool alarmState = OFF; // Bool variable to keep track of whether the alarm is on (true) or off (false).
+
+    while (true) { // Loop to keep checking to see if gas or high temperature triggers the alarm.
+        if (gasDetector || overTempDetector) { // This line is used if the gas is detected OR (||) if the temperature to too high.
+            alarmState = ON;// This sets the alarmState to ON if the gas or temperature is high.
+        }
+
+        alarmLed = alarmState; // This line updates the LED based on the alarmState.
+
+        if (alarmOffButton) { // If the alarmOffButton is pressed...
+            alarmState = OFF; // Then the alarm turns off.
+        }
+    }
+}
