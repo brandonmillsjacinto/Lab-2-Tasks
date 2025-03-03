@@ -3,21 +3,24 @@ Author: Brandon Mills Jacinto
 Date: 06/02/2025
 */
 
-#include "mbed.h"
-#include "arm_book_lib.h"
+#include "mbed.h" // I used the Mbed Library for Hardware control.
+#include "arm_book_lib.h" // I used the arm book library to use additional functions (i.e. ON, OFF, LED control etc.).
 
 int main()
 {
-    DigitalIn gasDetector (D2);
-    DigitalOut alarmLed (LED1);
-    gasDetector.mode(PullDown);
-    alarmLED = OFF;
-    while (true) {
-        if (gasDetector == ON) {
-            alarmLed = ON;
-        }
-        if (gasDetector == OFF) {
-            alarmLed = OFF;
+    DigitalIn gasDetector (D2); // This defines a digital input for the gas detector sensor at pin D2.
+    DigitalIn overTempDetector (D3) // This defines a digital input for the over-temperature sensor at pin D3.
+    DigitalOut alarmLed (LED1); // This defines a digial output for the alarm LED1.
+
+    gasDetector.mode(PullDown); // This sets the gas detector pin to pull-down mode so it starts at LOW by default.
+    overTempDetector.mode(PullDown); // This sets the over temperature pin to pull-down mode so it starts at LOW by default.
+    alarmLed = OFF; // This initlaises the alarm LED to be off.
+
+    while (true) { // This loop is used to constantly monitor the conditions.
+        if (gasDetector == ON || overTemp == ON) { // This line is used if the gas is detected OR (||) if the temperature to too high/
+            alarmLed = ON; // This turns on the alarm LED.
+        } else { // Otherwise, if there is no gas and the temperature is normal...
+            alarmLed = OFF; // Then the alarm LED is turned off.
         }
     }
 }
