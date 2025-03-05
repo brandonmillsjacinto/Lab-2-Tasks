@@ -1,68 +1,70 @@
-/* Filename: Lab 2 Task iii.cpp
+/* Filename: Lab 2 Task iv.cpp
 Author: Brandon Mills Jacinto
 Date: 06/02/2025
 */
-#include "mbed.h"
-#include "arm_book_lib.h"
+#include "mbed.h" // I used the Mbed Library for Hardware control.
+#include "arm_book_lib.h" // I used the arm book library to use additional functions (i.e. ON, OFF, LED control etc.).
 
 int main()
 {
-    DigitalIn enterButton(BUTTON1);
-    DigitalIn gasDetector(D2);
-    DigitalIn overTempDetector(D3);
-    DigitalIn aButton(D4);
-    DigitalIn bButton(D5);
-    DigitalIn cButton(D6);
-    DigitalIn dButton(D7);
+    DigitalIn enterButton(BUTTON1); // The enter button is mapped to BUTTON 1 (or B1 on the board) that is used to confirm any actions or reset the alarm.
+    DigitalIn gasDetector(D2); // This defines a digital input for the gas detector sensor at pin D2.
+    DigitalIn overTempDetector(D3); // This defines a digital input for the over-temperature sensor at pin D3.
+    DigitalIn aButton(D4); // Button A is located on Pin D4 and is the first digit of the 4-digit code.
+    DigitalIn bButton(D5); // Button B is located on Pin D5 and is the second digit of the 4-digit code.
+    DigitalIn cButton(D6); // Button C is located on Pin D6 and is the third digit of the 4-digit code.
+    DigitalIn dButton(D7); // Button D is located on Pin D4 and is the fourth digit of the 4-digit code
 
-    DigitalOut alarmLed(LED1);
-    DigitalOut incorrectCodeLed(LED3);
-    DigitalOut systemBlockedLed(LED2);
+    DigitalOut alarmLed(LED1); // LED1 on the NUCLEO board represents whether the alarm is ON or OFF.
+    DigitalOut incorrectCodeLed(LED3); // This line turns off the incorrect code LED (LED3) to reset the indication of an incorrect code entry. 
+    DigitalOut systemBlockedLed(LED2); // This lines turns off the system blocked LED (LED2) to reset any previous blocked state indication.
 
-    gasDetector.mode(PullDown);
-    overTempDetector.mode(PullDown);
-    aButton.mode(PullDown);
-    bButton.mode(PullDown);
-    cButton.mode(PullDown);
-    dButton.mode(PullDown);
-    
-    alarmLed = OFF;
-    incorrectCodeLed = OFF;
-    systemBlockedLed = OFF;
+    gasDetector.mode(PullDown); // This sets the gas detector pin to pull-down mode so it starts at LOW by default when not in use.
+    overTempDetector.mode(PullDown); // This sets the over temperature pin to pull-down mode so it starts at LOW by default when not in use.
+    aButton.mode(PullDown); // This sets the a button pin to pull-down mode so it starts at LOW by default when not in use.
+    bButton.mode(PullDown); // This sets the b button pin to pull-down mode so it starts at LOW by default when not in use.
+    cButton.mode(PullDown); // This sets the c button pin to pull-down mode so it starts at LOW by default when not in use.
+    dButton.mode(PullDown); // This sets the d button pin to pull-down mode so it starts at LOW by default when not in use.
 
-    bool alarmState = OFF;
-    int numberOfIncorrectCodes = 0;
+    //Lines 30-32 Initialises the LEDs to be off.
+    alarmLed = OFF; // This line indicates that the alarm LED starts as OFF as the system is initially in a safe state.
+    incorrectCodeLed = OFF; // This lines turns off the incorrect LED (LED3).
+    systemBlockedLed = OFF; // This line turns off the system blocked LED (LED2).
+
+    bool alarmState = OFF; // Bool variable to keep track of whether the alarm is on (true) or off (false).
+    int numberOfIncorrectCodes = 0; // This line is a counter for the number of incorrect code attempts.
 
     while (true) {
 
-        if(gasDetector || overTempDetector) {
-            alarmState = ON;
+        if(gasDetector || overTempDetector) { // If gas OR (||) over-te,perature detectors are triggered, then the alarm is turned on.
+            alarmState = ON; // This line turns the alarm on if either detector (gas or over-temperature) is detected.
         }
 
-        alarmLed = alarmState;
+        alarmLed = alarmState; // This line sets the alarm LED state based on the alarmState.
 
-        if(numberOfIncorrectCodes < 5) {
+        if(numberOfIncorrectCodes < 5) { // If there are less than 5 incorrect code attempts...
 
-            if(aButton && bButton && cButton && dButton && !enterButton) {
-                incorrectCodeLed = OFF;
+            if(aButton && bButton && cButton && dButton && !enterButton) { // If all four buttons are pressed, but the enter button is not pressed...
+                incorrectCodeLed = OFF; // Trn off the incorect LED (LED3) if no enter button is pressed.
             }
 
-            if(enterButton && !incorrectCodeLed && alarmState) {
-                if(aButton && bButton && !cButton && !dButton) {
-                    alarmState = OFF;
-                    numberOfIncorrectCodes = 0;
-                } else {
-                    incorrectCodeLed = ON;
-                    numberOfIncorrectCodes = numberOfIncorrectCodes + 1;
+            if(enterButton && !incorrectCodeLed && alarmState) { // If enter button is pressed, and no incorrect LED is on and alarm is on...
+                if(aButton && bButton && cButton && !dButton) { // Check if the entered code matches the correct code (aButton, bButton pressed, cButton pressed BUT, not dButton).
+                    alarmState = OFF; // This lines turns off the alarm if the code is correct.
+                    numberOfIncorrectCodes = 0; // This line resets the incorrect code counter.
+                } else { // Else...
+                    incorrectCodeLed = ON; // Turn on the incorrect LED (LED3) if the code is incorrect.
+                    numberOfIncorrectCodes = numberOfIncorrectCodes + 1; // This line increments the incorrect code counter by 1.
                 }
             }
-        } else {
-            for(int I = 0; I<60; I++) {
-                systemBlockedLed = !systemBlockedLed;
-                rtos::ThisThread::sleep_for(1000ms);
+        } else { // Else...
+            for(int I = 0; I < 60; I++) { // If 5 incorrect codes have been entered, block the system for 60 seconds.
+                systemBlockedLed = !systemBlockedLed; // This line flashes the system blocked LED (LED2) every second.
+                rtos::ThisThread::sleep_for(1000ms); // This lines waits for one second.
             }
-        systemBlockedLed = OFF;
-        numberOfIncorrectCodes = 0;
+            systemBlockedLed = OFF; // This line turns off the system blocked LED (LED2) after 60 seconds.
+            incorrectCodeLed = OFF; // This line turns off the incorrect code LED (LED3).
+            numberOfIncorrectCodes = 0; // This line resets the incorrect code counter.
         }
     }
 }
